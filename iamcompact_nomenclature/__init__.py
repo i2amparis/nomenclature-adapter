@@ -1,6 +1,3 @@
-"""Package to read and use definitions and mappings for IAM COMPACT."""
-import functools
-
 # Import _region_adjustments to make sure region attributes are adjusted as
 # needed before the definitions are loaded.
 # Change: Don't adjust for regions yet. Since the ISO3 code check in
@@ -19,15 +16,24 @@ from . import validation
 from . import aggregation
 from . import mapping
 
-check_var_aggregates = functools.wraps(aggregation.check_var_aggregates)(
-    functools.partial(aggregation.check_var_aggregates, dsd=get_dsd())
-)
+def check_var_aggregates(data, profile_name='iamcompact-default'):
+    
+    # Get DSD dynamically using the requested profile
+    dsd = get_dsd(profile_name=profile_name) 
+    return aggregation.check_var_aggregates(data, dsd=dsd)
 
-check_region_aggregates = functools.wraps(aggregation.check_region_aggregates)(
-    functools.partial(
-        aggregation.check_region_aggregates,
-        dsd=get_dsd(),
-        processor=get_region_processor(),
+
+def check_region_aggregates(data, profile_name='iamcompact-default'):
+    
+    # Get DSD dynamically using the requested profile
+    dsd = get_dsd(profile_name=profile_name) 
+    
+    # Get the region processor 
+    processor = get_region_processor() 
+    
+    return aggregation.check_region_aggregates(
+        data,
+        dsd=dsd,
+        processor=processor,
     )
-)
     
