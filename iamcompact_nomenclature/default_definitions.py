@@ -1,10 +1,12 @@
+import os
+import shutil
+import tempfile
 import functools
 from pathlib import Path
 from nomenclature import DataStructureDefinition
 from nomenclature.processor import RegionProcessor
 
-
-_definitions_root: Path = Path(__file__).parent.parent / 'data' / 'definition_repos'
+_definitions_root: Path = (Path(__file__).parent.parent /'iamcompact_nomenclature'/ 'data' / 'definition_repos').resolve()
 
 # Global paths, dynamically set by _set_profile_paths.
 _dsd_paths: list[Path] = []
@@ -46,12 +48,24 @@ def _set_profile_paths(profile_name: str) -> None:
     global _dsd_paths
     
     # 1. Determine the correct profile directory based on the input name
+    #if profile_name == 'iamcompact-default':
+    #   profile_directory = _definitions_root / 'definitions'
+    #elif profile_name == 'new-project-defs':
+    #   profile_directory = _definitions_root / profile_name 
+    #else:
+    #  raise ValueError(f"Unknown nomenclature profile: {profile_name}")
+    
     if profile_name == 'iamcompact-default':
         profile_directory = _definitions_root / 'definitions'
-    elif profile_name == 'new-project-defs':
-        profile_directory = _definitions_root / profile_name 
     else:
-        raise ValueError(f"Unknown nomenclature profile: {profile_name}")
+        profile_directory = _definitions_root / profile_name
+
+    # --- DIAGNOSTIC PRINTING ---
+    print(f"DIAGNOSTIC: __file__ is: {Path(__file__).resolve()}")
+    print(f"DIAGNOSTIC: Calculated _definitions_root is: {_definitions_root}")
+    print(f"DIAGNOSTIC: Checking for profile directory: {profile_directory}")
+    print(f"DIAGNOSTIC: Does the directory exist? {profile_directory.is_dir()}")
+    # --- END DIAGNOSTIC PRINTING ---
     
     # 2. Validation Check
     if not profile_directory.is_dir():
@@ -70,7 +84,8 @@ def get_dsd(
     name: str = "iamcompact-default",
     repo: str = None,
     revision: str = None,
-    profile_name: str = 'iamcompact-default' # New argument
+    profile_name: str = 'iamcompact-default', # New argument
+    force_reload: bool = False
 ) -> DataStructureDefinition:
     """
     Returns the DataStructureDefinition object, first setting the profile paths.
@@ -81,10 +96,12 @@ def get_dsd(
 
     # 2. Initialize the DSD using the newly set global path
     dsd = DataStructureDefinition(
-        get_dsd_path(),
-        name=name,
-        repo=repo,
-        revision=revision,
+        get_dsd_path()[0],
+        dimensions=dimensions,
+        use_local_definitions=False
+        #name=name,
+        #repo=repo,
+        #revision=revision,
     )
     return dsd
 
