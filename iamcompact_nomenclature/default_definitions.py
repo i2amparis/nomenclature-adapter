@@ -97,8 +97,7 @@ def get_dsd(
     # 2. Initialize the DSD using the newly set global path
     dsd = DataStructureDefinition(
         get_dsd_path()[0],
-        dimensions=dimensions,
-        use_local_definitions=False
+        dimensions=dimensions
         #name=name,
         #repo=repo,
         #revision=revision,
