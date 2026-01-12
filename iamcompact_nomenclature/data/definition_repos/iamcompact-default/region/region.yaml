@@ -1,0 +1,7 @@
+- countries:
+    - USA:
+        description: United States of America
+    - CHI:
+        description: China
+    - RUS:
+        description: Russia

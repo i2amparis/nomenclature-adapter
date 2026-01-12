@@ -1,122 +1,184 @@
-import os
-import shutil
-import tempfile
-import functools
-from pathlib import Path
-from nomenclature import DataStructureDefinition
-from nomenclature.processor import RegionProcessor
+"""
+Defaults for definitions to use.
 
-_definitions_root: Path = (Path(__file__).parent.parent /'iamcompact_nomenclature'/ 'data' / 'definition_repos').resolve()
-
-# Global paths, dynamically set by _set_profile_paths.
-_dsd_paths: list[Path] = []
-_mappings_path: Path = _definitions_root / 'mappings' 
-
-# Global cache for the RegionProcessor
-_region_processor: RegionProcessor | None = None
-
-dimensions = (
-    'model',
-    'scenario',
-    'region',
-    'variable',
-)
-"""Defines which dimensions are provided by the data structure definition object
-that is returned by `get_dsd`.
-
-At the moment, this attribute is not used by the `iamcompact-nomenclature`
-package itself (the dimensions are now specified in the nomenclature.yaml files
-in the directories under `data`), but is kept since it may be used by external
-code, and may be useful for internal use again in the future.
+Profile-aware implementation compatible with Pydantic v2 and
+modern nomenclature / nomenclature-iamc.
 """
 
-def get_dsd_path() -> list[Path]:
-    """Returns the currently active DSD paths."""
-    return _dsd_paths
+from collections.abc import Sequence
+import logging
+from pathlib import Path
+from typing import Optional
 
-def get_mappings_path() -> Path:
-    """Returns the currently active mappings path."""
-    return _mappings_path
+import git
+import nomenclature
 
-# CORE LOGIC TO SWITCH PROFILES
+logger = logging.getLogger(__name__)
 
-def _set_profile_paths(profile_name: str) -> None:
-    """
-    INTERNAL: Sets the global DSD path based on the profile name.
-    It targets the directory containing the profile-specific nomenclature.yaml.
-    """
-    global _dsd_paths
-    
-    # 1. Determine the correct profile directory based on the input name
-    #if profile_name == 'iamcompact-default':
-    #   profile_directory = _definitions_root / 'definitions'
-    #elif profile_name == 'new-project-defs':
-    #   profile_directory = _definitions_root / profile_name 
-    #else:
-    #  raise ValueError(f"Unknown nomenclature profile: {profile_name}")
-    
-    if profile_name == 'iamcompact-default':
-        profile_directory = _definitions_root / 'definitions'
-    else:
-        profile_directory = _definitions_root / profile_name
+# -------------------------------------------------------------------
+# Paths & constants
+# -------------------------------------------------------------------
 
-    # --- DIAGNOSTIC PRINTING ---
-    print(f"DIAGNOSTIC: __file__ is: {Path(__file__).resolve()}")
-    print(f"DIAGNOSTIC: Calculated _definitions_root is: {_definitions_root}")
-    print(f"DIAGNOSTIC: Checking for profile directory: {profile_directory}")
-    print(f"DIAGNOSTIC: Does the directory exist? {profile_directory.is_dir()}")
-    # --- END DIAGNOSTIC PRINTING ---
-    
-    # 2. Validation Check
-    if not profile_directory.is_dir():
-        raise FileNotFoundError(
-            f"Profile definitions directory for '{profile_name}' not found at {profile_directory}"
-        )
-        
-    # 3. Set the global DSD path
-    _dsd_paths = [profile_directory]
+_DATA_ROOT = Path(__file__).parent / "data"
+_DEFINITION_REPOS_ROOT = _DATA_ROOT / "definition_repos"
+_MAPPINGS_PATH = _DEFINITION_REPOS_ROOT / "mappings"
 
+dimensions: tuple[str, ...] = (
+    "model",
+    "scenario",
+    "region",
+    "variable",
+)
 
-# FUNCTIONS TO GET DSD AND PROCESSOR
+# -------------------------------------------------------------------
+# Caches (PROFILE-SCOPED)
+# -------------------------------------------------------------------
 
-@functools.lru_cache()
+_dsd_cache: dict[str, nomenclature.DataStructureDefinition] = {}
+_region_processor_cache: dict[str, nomenclature.RegionProcessor] = {}
+
+# -------------------------------------------------------------------
+# Helpers
+# -------------------------------------------------------------------
+
+def _pull_git_repos(parent: Path) -> None:
+    """Pull updates for any git repositories under parent."""
+    if not parent.is_dir():
+        return
+
+    for child in parent.iterdir():
+        if not child.is_dir():
+            continue
+        if (child / ".git").is_dir():
+            try:
+                repo = git.Repo(child)
+                logger.debug("Pulling updates for nomenclature repo in %s", child)
+                repo.remotes.origin.pull()
+            except Exception as exc:
+                logger.warning(
+                    "Failed to pull repo in %s: %s",
+                    child,
+                    exc,
+                )
+
+# -------------------------------------------------------------------
+# Core loaders
+# -------------------------------------------------------------------
+
 def get_dsd(
-    name: str = "iamcompact-default",
-    repo: str = None,
-    revision: str = None,
-    profile_name: str = 'iamcompact-default', # New argument
-    force_reload: bool = False
-) -> DataStructureDefinition:
+    profile_name: str | None = None,
+    *,
+    force_reload: bool = False,
+    dimensions_override: Optional[Sequence[str]] = None,
+) -> nomenclature.DataStructureDefinition:
     """
-    Returns the DataStructureDefinition object, first setting the profile paths.
-    Caches the result based on all input arguments.
-    """
-    # 1. Switch the global path state based on the profile
-    _set_profile_paths(profile_name) 
+    Return a DataStructureDefinition for the given profile.
 
-    # 2. Initialize the DSD using the newly set global path
-    dsd = DataStructureDefinition(
-        get_dsd_path()[0],
-        dimensions=dimensions
-        #name=name,
-        #repo=repo,
-        #revision=revision,
+    Parameters
+    ----------
+    profile_name
+        Name of the folder under `data/definition_repos`.
+    force_reload
+        Reload definitions even if cached.
+    dimensions_override
+        Optional override for dimensions.
+    """
+    if profile_name is None:
+        try:
+            import streamlit as st
+            from common_keys import SSKey
+            profile_name = st.session_state.get(
+                SSKey.VALIDATION_PROFILE,
+                "iamcompact-default",
+            )
+        except Exception:
+            profile_name = "iamcompact-default"
+
+    if force_reload:
+        _dsd_cache.pop(profile_name, None)
+        _region_processor_cache.pop(profile_name, None)
+
+    if profile_name not in _dsd_cache:
+        profile_path = _DEFINITION_REPOS_ROOT / profile_name
+        if not profile_path.is_dir():
+            raise FileNotFoundError(
+                f"Definition profile not found: {profile_path}"
+            )
+
+        # Pull git repos (if any)
+        _pull_git_repos(profile_path.parent)
+
+        logger.info(
+            "Loading DataStructureDefinition from profile: %s",
+            profile_path,
+        )
+
+        _dsd_cache[profile_name] = nomenclature.DataStructureDefinition(
+            path=profile_path,
+            dimensions=dimensions_override or dimensions,
+        )
+
+    return _dsd_cache[profile_name]
+
+
+def get_region_processor(
+    profile_name: str | None = None,
+    *,
+    force_reload: bool = False,
+) -> nomenclature.RegionProcessor:
+    """
+    Return a RegionProcessor.
+
+    If profile_name is None, fall back to the profile stored in session state
+    or the default profile.
+    """
+    if profile_name is None:
+        try:
+            # Lazy import to avoid Streamlit dependency at import time
+            import streamlit as st
+            from common_keys import SSKey
+
+            profile_name = st.session_state.get(
+                SSKey.VALIDATION_PROFILE,
+                "iamcompact-default",
+            )
+        except Exception:
+            # Absolute fallback (e.g. CLI usage)
+            profile_name = "iamcompact-default"
+
+    if force_reload:
+        _region_processor_cache.pop(profile_name, None)
+
+    if profile_name not in _region_processor_cache:
+        logger.info(
+            "Loading RegionProcessor for profile '%s' from mappings path: %s",
+            profile_name,
+            _MAPPINGS_PATH,
+        )
+
+        dsd = get_dsd(profile_name)
+
+        _region_processor_cache[profile_name] = (
+            nomenclature.RegionProcessor.from_directory(
+                path=_MAPPINGS_PATH,
+                dsd=dsd,
+            )
+        )
+
+    return _region_processor_cache[profile_name]
+
+
+# -------------------------------------------------------------------
+# Utilities
+# -------------------------------------------------------------------
+
+def list_profiles() -> list[str]:
+    """List available definition profiles."""
+    if not _DEFINITION_REPOS_ROOT.is_dir():
+        return []
+
+    return sorted(
+        p.name
+        for p in _DEFINITION_REPOS_ROOT.iterdir()
+        if p.is_dir() and p.name != "mappings"
     )
-    return dsd
-
-# Helper function for loading the RegionProcessor
-def _load_region_processor() -> RegionProcessor:
-    """Helper function to instantiate the RegionProcessor."""
-    return RegionProcessor()
-
-
-def get_region_processor(force_reload: bool = False) -> RegionProcessor:
-    """
-    Returns the RegionProcessor object, implementing caching and allowing force reloading.
-    """
-    global _region_processor
-    
-    if _region_processor is None or force_reload:
-        _region_processor = _load_region_processor()
-        
-    return _region_processor

@@ -1,0 +1,8 @@
+- Baseline:
+    description: Baseline scenario
+- CP_EI:
+    description: Current Policies with Emission Intensity
+- NDC_EI:
+    description: NDC Emission Intensity
+- NDC_LTT:
+    description: NDC Long-Term Target
