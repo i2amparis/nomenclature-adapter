@@ -1,6 +1,0 @@
-- Final Energy|Electricity:
-    description: Final energy consumption in electricity
-    unit: EJ/yr
-- Emissions|CO2:
-    description: CO2 emissions
-    unit: Mt CO2/yr

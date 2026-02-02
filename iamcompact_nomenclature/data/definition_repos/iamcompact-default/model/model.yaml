@@ -1,9 +1,0 @@
-#- name: GCAM
-#- name: Gemini-E3
-#- name: MUSE
-- GCAM:
-    description: GCAM model
-- Gemini-E3:
-    description: Gemini-E3 model
-- MUSE:
-    description: MUSE model
