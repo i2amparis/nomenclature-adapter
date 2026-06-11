@@ -6,3 +6,4 @@ __pycache__/
 # Ignore sshfs-mounted DVC remote directory
 /dvc_sshfs_remote/
 
+.DS_Store
