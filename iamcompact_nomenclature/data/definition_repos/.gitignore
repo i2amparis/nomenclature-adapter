@@ -1,2 +1,5 @@
-/common-definitions-fork/
-/iamcompact-nomenclature-definitions/
+*
+!.gitignore
+!*/
+!*/.gitkeep
+!*/nomenclature.yaml

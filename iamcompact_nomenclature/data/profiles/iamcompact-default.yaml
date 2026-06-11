@@ -1,0 +1,28 @@
+repositories:
+  common-definitions-fork:
+    url: https://github.com/ciceroOslo/common-definitions.git/
+    release: iamcompact-validation-ui
+  iamcompact-nomenclature-definitions:
+    url: https://github.com/ciceroOslo/iamcompact-nomenclature-definitions.git
+    release: validation-ui
+dimensions:
+  - variable
+  - region
+  - model
+  - scenario
+definitions:
+  variable:
+    repository: common-definitions-fork
+    file: definitions/variable/emissions/emissions.yaml
+  region:
+    repository: iamcompact-nomenclature-definitions
+    file: definitions/region/common.yaml
+  model:
+    repository: iamcompact-nomenclature-definitions
+    file: definitions/model/iamcompact_iams.yaml
+  scenario:
+    repository: iamcompact-nomenclature-definitions
+    file: definitions/scenario/common_scenarios.yaml
+mappings:
+  repository: iamcompact-nomenclature-definitions
+  file: mappings/GCAM_7.1.yaml

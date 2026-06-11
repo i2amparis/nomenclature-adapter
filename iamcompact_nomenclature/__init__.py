@@ -10,6 +10,7 @@ from .default_definitions import (
     dimensions,
     get_dsd,
     get_region_processor,
+    get_validation_profiles,
 )
 
 from . import validation
@@ -29,7 +30,7 @@ def check_region_aggregates(data, profile_name='iamcompact-default'):
     dsd = get_dsd(profile_name=profile_name) 
     
     # Get the region processor 
-    processor = get_region_processor() 
+    processor = get_region_processor(profile_name=profile_name)
     
     return aggregation.check_region_aggregates(
         data,

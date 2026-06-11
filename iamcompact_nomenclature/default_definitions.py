@@ -2,14 +2,13 @@
 from collections.abc import Sequence
 import logging
 from pathlib import Path
+import shutil
 from typing import Final, Optional
 
 from nomenclature.processor.region import RegionAggregationMapping
 import yaml
 import git
 import nomenclature
-import streamlit as st
-from common_keys import SSKey
 
 from .multi_load import (
     MergedDataStructureDefinition,
@@ -20,6 +19,13 @@ from .multi_load import (
 logger: logging.Logger = logging.getLogger(__name__)
 
 _data_root: Final[Path] = Path(__file__).parent / "data"
+_profiles_root: Final[Path] = _data_root / "profiles"
+_profile_cache_root: Final[Path] = _data_root / "definition_repos"
+
+_profile_labels: Final[dict[str, str]] = {
+    "iamcompact-default": "IAM COMPACT Default",
+    "transience": "TRANSIENCE",
+}
 
 dimensions: Final[tuple[str, ...]] = (
     "model",
@@ -34,15 +40,133 @@ _individual_dsds: dict[str, list[nomenclature.DataStructureDefinition]] = {}
 _region_processors: dict[str, nomenclature.RegionProcessor | None] = {}
 
 
+def _profile_label(profile_name: str) -> str:
+    if profile_name in _profile_labels:
+        return _profile_labels[profile_name]
+    return profile_name.replace("-", " ").replace("_", " ").title()
+
+
+def get_validation_profiles() -> dict[str, str]:
+    """Return available validation profiles as display label -> profile name."""
+    profiles = {
+        _profile_label(profile_file.stem): profile_file.stem
+        for profile_file in sorted(_profiles_root.glob("*.yaml"))
+    }
+
+    if "IAM COMPACT Default" in profiles:
+        return {
+            "IAM COMPACT Default": profiles.pop("IAM COMPACT Default"),
+            **profiles,
+        }
+
+    return profiles or {"IAM COMPACT Default": "iamcompact-default"}
+
+
+def _get_profile_manifest(profile_name: str) -> Path | None:
+    profile_filename = Path(profile_name).name
+    if not profile_filename.endswith((".yaml", ".yml")):
+        profile_filename = f"{profile_filename}.yaml"
+
+    manifest = _profiles_root / profile_filename
+    if manifest.is_file():
+        return manifest
+
+    return None
+
+
+def _sync_profile_manifest(manifest: Path, profile_root: Path) -> None:
+    target = profile_root / "nomenclature.yaml"
+    if not target.is_file() or target.read_bytes() != manifest.read_bytes():
+        shutil.copy2(manifest, target)
+
+
+def _checkout_repository(
+    profile_root: Path,
+    repo_name: str,
+    repo_config: dict,
+) -> None:
+    repo_url = repo_config.get("url")
+    repo_ref = repo_config.get("release")
+    repo_path = profile_root / repo_name
+
+    if not repo_url:
+        raise ValueError(f"Repository '{repo_name}' has no URL")
+
+    if (repo_path / ".git").is_dir():
+        repo = git.Repo(repo_path)
+        logger.debug("Fetching updates for %s", repo_path)
+        repo.remotes.origin.fetch()
+    elif repo_path.exists():
+        logger.warning(
+            "Repository path %s already exists but is not a git repository",
+            repo_path,
+        )
+        return
+    else:
+        logger.info("Cloning %s into %s", repo_url, repo_path)
+        clone_kwargs = {"branch": repo_ref} if repo_ref else {}
+        repo = git.Repo.clone_from(repo_url, repo_path, **clone_kwargs)
+
+    if repo_ref:
+        repo.git.checkout(repo_ref)
+        try:
+            repo.git.pull("origin", repo_ref)
+        except git.GitCommandError:
+            logger.debug("Could not pull ref '%s' for %s", repo_ref, repo_path)
+    else:
+        repo.remotes.origin.pull()
+
+
+def _materialize_profile_repositories(manifest: Path, profile_root: Path) -> None:
+    with manifest.open("r", encoding="utf-8") as stream:
+        config = yaml.safe_load(stream) or {}
+    if not isinstance(config, dict):
+        raise ValueError(f"Profile manifest '{manifest}' must contain a mapping")
+
+    repositories = config.get("repositories", {})
+    if not isinstance(repositories, dict):
+        raise ValueError(
+            f"Profile manifest '{manifest}' has invalid repositories section"
+        )
+
+    for repo_name, repo_config in repositories.items():
+        if not isinstance(repo_config, dict):
+            raise ValueError(
+                f"Repository '{repo_name}' in '{manifest}' must be a mapping"
+            )
+        _checkout_repository(profile_root, repo_name, repo_config)
+
+
+def _materialize_profile(profile_name: str) -> Path | None:
+    manifest = _get_profile_manifest(profile_name)
+    if manifest is None:
+        return None
+
+    profile_root = _profile_cache_root / manifest.stem
+    profile_root.mkdir(parents=True, exist_ok=True)
+    (profile_root / "definitions").mkdir(exist_ok=True)
+    (profile_root / "mappings").mkdir(exist_ok=True)
+    _sync_profile_manifest(manifest, profile_root)
+    _materialize_profile_repositories(manifest, profile_root)
+    return profile_root
+
+
 def _get_profile_name() -> str:
-    return st.session_state.get(
-        SSKey.VALIDATION_PROFILE,
-        "iamcompact-default",
-    )
+    try:
+        import streamlit as st
+        from common_keys import SSKey
+    except ImportError:
+        return "iamcompact-default"
+
+    return st.session_state.get(SSKey.VALIDATION_PROFILE, "iamcompact-default")
 
 
 def _get_profile_root(profile_name: str) -> Path:
-    root = _data_root / "definition_repos" / profile_name
+    root = _materialize_profile(profile_name)
+    if root is not None:
+        return root
+
+    root = _profile_cache_root / profile_name
     if not root.is_dir():
         raise FileNotFoundError(f"Unknown profile '{profile_name}'")
     return root
