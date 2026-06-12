@@ -24,11 +24,7 @@ _data_root: Final[Path] = Path(__file__).parent / "data"
 _profiles_root: Final[Path] = _data_root / "profiles"
 _profile_cache_env_var: Final[str] = "NOMENCLATURE_PROFILE_CACHE"
 _profile_cache_app_name: Final[str] = "nomenclature-template"
-
-_profile_labels: Final[dict[str, str]] = {
-    "iamcompact-default": "IAM COMPACT Default",
-    "transience": "TRANSIENCE",
-}
+DEFAULT_PROFILE: Final[str] = "iamcompact"
 
 dimensions: Final[tuple[str, ...]] = (
     "model",
@@ -62,26 +58,27 @@ def _get_profile_cache_root() -> Path:
     return _default_cache_root()
 
 
-def _profile_label(profile_name: str) -> str:
-    if profile_name in _profile_labels:
-        return _profile_labels[profile_name]
-    return profile_name.replace("-", " ").replace("_", " ").title()
+def _profile_label(profile_file: Path) -> str:
+    return profile_file.stem
 
 
 def get_validation_profiles() -> dict[str, str]:
     """Return available validation profiles as display label -> profile name."""
     profiles = {
-        _profile_label(profile_file.stem): profile_file.stem
+        _profile_label(profile_file): profile_file.stem
         for profile_file in sorted(_profiles_root.glob("*.yaml"))
     }
 
-    if "IAM COMPACT Default" in profiles:
+    default_profile_file = _profiles_root / f"{DEFAULT_PROFILE}.yaml"
+    default_profile_label = _profile_label(default_profile_file) \
+        if default_profile_file.is_file() else DEFAULT_PROFILE
+    if default_profile_label in profiles:
         return {
-            "IAM COMPACT Default": profiles.pop("IAM COMPACT Default"),
+            default_profile_label: profiles.pop(default_profile_label),
             **profiles,
         }
 
-    return profiles or {"IAM COMPACT Default": "iamcompact-default"}
+    return profiles or {default_profile_label: DEFAULT_PROFILE}
 
 
 def _get_profile_manifest(profile_name: str) -> Path | None:
@@ -178,9 +175,9 @@ def _get_profile_name() -> str:
         import streamlit as st
         from common_keys import SSKey
     except ImportError:
-        return "iamcompact-default"
+        return DEFAULT_PROFILE
 
-    return st.session_state.get(SSKey.VALIDATION_PROFILE, "iamcompact-default")
+    return st.session_state.get(SSKey.VALIDATION_PROFILE, DEFAULT_PROFILE)
 
 
 def _get_profile_root(profile_name: str) -> Path:

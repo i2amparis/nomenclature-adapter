@@ -7,6 +7,7 @@
 # from . import _region_adjustments
 
 from .default_definitions import (
+    DEFAULT_PROFILE,
     dimensions,
     get_dsd,
     get_region_processor,
@@ -17,14 +18,14 @@ from . import validation
 from . import aggregation
 from . import mapping
 
-def check_var_aggregates(data, profile_name='iamcompact-default'):
+def check_var_aggregates(data, profile_name=DEFAULT_PROFILE):
     
     # Get DSD dynamically using the requested profile
     dsd = get_dsd(profile_name=profile_name) 
     return aggregation.check_var_aggregates(data, dsd=dsd)
 
 
-def check_region_aggregates(data, profile_name='iamcompact-default'):
+def check_region_aggregates(data, profile_name=DEFAULT_PROFILE):
     
     # Get DSD dynamically using the requested profile
     dsd = get_dsd(profile_name=profile_name) 

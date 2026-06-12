@@ -4,7 +4,7 @@ repositories:
     release: main
   common-definitions-fork:
     url: https://github.com/ciceroOslo/common-definitions.git
-    release: iamcompact-validation-ui
+    release: main
 dimensions:
   - variable
   - region
@@ -19,7 +19,7 @@ definitions:
     file: definitions/region/common.yaml
   model:
     repository: transience-defs
-    file: definitions/model/iamcompact_iams.yaml
+    file: definitions/model/transience_models.yaml
   scenario:
     repository: transience-defs
     file: definitions/scenario/common_scenarios.yaml
