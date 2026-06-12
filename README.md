@@ -1,6 +1,5 @@
-# iamcompact-nomenclature
-Data structure definition for validation of model outputs in the HORIZON EUROPE
-project IAM COMPACT, using nomenclature-iamc
+# nomenclature-adapter
+Profile loader for validation nomenclature definitions using nomenclature-iamc.
 
 ## Installation
 This package can be installed as a Python package and used as a profile loader
@@ -8,37 +7,37 @@ for `nomenclature-iamc` definitions.
 
 To install as a Python package using `pip`:
 ```
-pip install git+https://github.com/ciceroOslo/iamcompact-nomenclature.git
+pip install git+https://github.com/i2amparis/nomenclature-template.git
 ```
 Or to install a specific branch or version (`branchname` in the command below):
 ```
-pip install git+https://github.com/ciceroOslo/iamcompact-nomenclature.git@branchname
+pip install git+https://github.com/i2amparis/nomenclature-template.git@branchname
 ```
 
 If you use [poetry](https://python-poetry.org/docs/), you can use the following
 commands (when in your project directory):
 ```
-poetry add git+https://github.com/ciceroOslo/iamcompact-nomenclature.git
+poetry add git+https://github.com/i2amparis/nomenclature-template.git
 ```
 or
 ```
-poetry add git+https://github.com/ciceroOslo/iamcompact-nomenclature.git#branchname
+poetry add git+https://github.com/i2amparis/nomenclature-template.git#branchname
 ```
 
 Eventually, the package will probably be published on [PyPi](https://pypi.org/)
 so that you can install it directly with a command like `pip install
-iamcompact-nomenclature`. At the moment, this has not been done, hence the need
+nomenclature-adapter`. At the moment, this has not been done, hence the need
 for using the more complex commands above to install from the repository.
 
 At the moment, there are no plans to create a
 [conda](https://docs.conda.io/en/latest/) package. If you have a pressing need
 for that, please [create an
-issue](https://github.com/ciceroOslo/iamcompact-nomenclature/issues).
+issue](https://github.com/i2amparis/nomenclature-template/issues).
 
 
 ## Usage
-The package includes profile manifests in
-`iamcompact_nomenclature/data/profiles/`. These manifests point to external
+The repository includes profile manifests in the top-level `profiles/`
+directory. These manifests point to external
 definition repositories, which are cloned into a local cache when a profile is
 loaded. By default, the cache is located in the user's cache directory, for
 example `~/.cache/nomenclature-template` on Linux. Set the environment variable
@@ -57,7 +56,7 @@ use the following code (assumes you have installed the package as in
 "Installation" above):
 
 ```
-import iamcompact_nomenclature as icnom
+import nomenclature_adapter as icnom
 
 dsd = icnom.get_dsd()
 processor = icnom.get_region_processor()
@@ -80,7 +79,7 @@ depends on the data structure definition.
 ## Perform validation
 You can validate names (models, scenarios, variables, regions, ...) and
 variable/unit combinations using the functions `get_invalid_items()` and
-`get_invalid_variable_units()` in the `iamcompact_nomenclature.validation`
+`get_invalid_variable_units()` in the `nomenclature_adapter.validation`
 module. Both take a `pyam.IamDataFrame` with your model results as input, and
 return a dictionary of invalid names for each dimension, or DataFrame of invalid
 units, respectively (see details below).
@@ -91,7 +90,7 @@ filename of your IAMC-formatted CSV or Excel file with model output):
 
 ```
 import pyam
-import iamcompact_nomenclature as icnom
+import nomenclature_adapter as icnom
 
 iamdf = pyam.IamDataFrame(data_path)
 
@@ -114,7 +113,7 @@ The DataFrame has the variable names in the index, and two columns:
 
 Both functions accept an optional keyword argument `dsd`, which lets you use the
 function with an alternative DataStructureDefinition instance (the default is
-the built-in one, as returned by `iamcompact_nomenclature.get_dsd()`).
+the built-in one, as returned by `nomenclature_adapter.get_dsd()`).
 
 `get_invalid_items()` additionally accepts a keyword argument `dimensions`, that
 lets you specify which dimensions to check names for as a list of strings (must
@@ -143,7 +142,7 @@ To check all aggregate variables in an `IamDataFrame` named `iamdf`, use the
 following call:
 
 ```
-import iamcompact_nomenclature as icnom
+import nomenclature_adapter as icnom
 
 results = icnom.check_var_aggregates(iamdf)
 ```
@@ -203,7 +202,7 @@ To check that variables set for aggregate regions match the sum of the same
 variable in constituent regions and countries, use the following call:
 
 ```
-import iamcompact_nomenclature as icnom
+import nomenclature_adapter as icnom
 
 results = icnom.check_region_aggregates(iamdf)
 ```
@@ -215,7 +214,7 @@ override, use the `dsd` or `processor` keyword arguments to
 
 Results are returned as a `RegionAggregationCheckResults` object with the
 following attributes (see also the docstring of
-`iamcompact_nomenclature.aggregation.RegionAggregationCheckResults`):
+`nomenclature_adapter.aggregation.RegionAggregationCheckResults`):
   * `failed_checks` (`pandas.DataFrame` or `None`): A dataframe with the items
     that failed the checks. It contains three columns:
     * `original`: The value of the variable for the aggregate, model-native

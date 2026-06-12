@@ -1,7 +1,7 @@
 [project]
-name = "iamcompact-nomenclature"
+name = "nomenclature-adapter"
 version = "0.10.1"
-description = "Data structure definition for validation of model outputs in the HORIZON EUROPE project IAM COMPACT, using nomenclature-iamc"
+description = "Profile loader for validation nomenclature definitions using nomenclature-iamc"
 authors = [
     { name = "Jan Ivar Korsbakken", email = "janko@cicero.oslo.no" }
 ]
@@ -30,4 +30,5 @@ dev = [
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["iamcompact_nomenclature"]
+packages = ["nomenclature_adapter"]
+force-include = { "profiles" = "profiles" }

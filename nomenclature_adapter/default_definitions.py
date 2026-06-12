@@ -20,8 +20,7 @@ from .multi_load import (
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_data_root: Final[Path] = Path(__file__).parent / "data"
-_profiles_root: Final[Path] = _data_root / "profiles"
+_profiles_dir_name: Final[str] = "profiles"
 _profile_cache_env_var: Final[str] = "NOMENCLATURE_PROFILE_CACHE"
 _profile_cache_app_name: Final[str] = "nomenclature-template"
 DEFAULT_PROFILE: Final[str] = "iamcompact"
@@ -37,6 +36,18 @@ dimensions: Final[tuple[str, ...]] = (
 _dsds: dict[str, nomenclature.DataStructureDefinition] = {}
 _individual_dsds: dict[str, list[nomenclature.DataStructureDefinition]] = {}
 _region_processors: dict[str, nomenclature.RegionProcessor | None] = {}
+
+
+def _find_profiles_root() -> Path:
+    for parent in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
+        profiles_root = parent / _profiles_dir_name
+        if profiles_root.is_dir():
+            return profiles_root
+
+    raise FileNotFoundError(
+        f"Could not find bundled validation profiles directory "
+        f"'{_profiles_dir_name}'"
+    )
 
 
 def _default_cache_root() -> Path:
@@ -64,12 +75,13 @@ def _profile_label(profile_file: Path) -> str:
 
 def get_validation_profiles() -> dict[str, str]:
     """Return available validation profiles as display label -> profile name."""
+    profiles_root = _find_profiles_root()
     profiles = {
         _profile_label(profile_file): profile_file.stem
-        for profile_file in sorted(_profiles_root.glob("*.yaml"))
+        for profile_file in sorted(profiles_root.glob("*.yaml"))
     }
 
-    default_profile_file = _profiles_root / f"{DEFAULT_PROFILE}.yaml"
+    default_profile_file = profiles_root / f"{DEFAULT_PROFILE}.yaml"
     default_profile_label = _profile_label(default_profile_file) \
         if default_profile_file.is_file() else DEFAULT_PROFILE
     if default_profile_label in profiles:
@@ -86,7 +98,7 @@ def _get_profile_manifest(profile_name: str) -> Path | None:
     if not profile_filename.endswith((".yaml", ".yml")):
         profile_filename = f"{profile_filename}.yaml"
 
-    manifest = _profiles_root / profile_filename
+    manifest = _find_profiles_root() / profile_filename
     if manifest.is_file():
         return manifest
 

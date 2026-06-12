@@ -1067,13 +1067,14 @@ wheels = [
 ]
 
 [[package]]
-name = "iamcompact-nomenclature"
+name = "nomenclature-adapter"
 version = "0.10.1"
 source = { editable = "." }
 dependencies = [
     { name = "gitpython" },
     { name = "nomenclature-iamc" },
     { name = "pyam-iamc" },
+    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]

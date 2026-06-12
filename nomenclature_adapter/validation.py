@@ -37,7 +37,7 @@ def get_invalid_names(
         The `IamDataFrame` with model output to be validated.
     dsd : DataStructureDefinition, optional
         The `DataStructureDefinition` to validate against. Optional, will call
-        `iamcompact_nomenclature.get_dsd()` if not provided.
+        `nomenclature_adapter.get_dsd()` if not provided.
     dimensions : sequence of str, optional
         The dimensions to validate. Optional, defaults to the intersection of
         dimensions that are found in both `iamdf` and in `dsd`.
@@ -100,7 +100,7 @@ def get_invalid_model_regions(
         The `IamDataFrame` with data to check for region names.
     dsd : DataStructureDefinition, optional
         The `DataStructureDefinition` to validate against. Optional, will call
-        `iamcompact_nomenclature.get_dsd()` if not provided.
+        `nomenclature_adapter.get_dsd()` if not provided.
     region_processor : nomenclature.RegionProcessor, optional
         The `RegionProcessor` to use for finding model-native region names. If
         not provided, will call `nomenclature.get_region_processor()`.
@@ -180,7 +180,7 @@ def get_invalid_variable_units(
         IamDataFrame to validate
     dsd : DataStructureDefinition, optional
         The DataStructureDefinition to validate against. Optional, will call
-        `iamcompact_nomenclature.get_dsd()` if not provided.
+        `nomenclature_adapter.get_dsd()` if not provided.
     raise_on_missing_var : bool, optional
         If True, raise a KeyError if `iamdf` contains variables that are not
         defined in `dsd`. If False, ignore such variables. Optional, default:

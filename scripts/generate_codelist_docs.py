@@ -9,8 +9,8 @@ import nomenclature
 from nomenclature.code import VariableCode
 from nomenclature.codelist import VariableCodeList
 
-import iamcompact_nomenclature as icnom   
-from iamcompact_nomenclature.dsd_utils.codelist_formatter \
+import nomenclature_adapter as icnom   
+from nomenclature_adapter.dsd_utils.codelist_formatter \
     import VariableCodeListHTMLFormatter
 
 
@@ -18,7 +18,7 @@ def main():
     """Run the script.
     
     The script accepts the following command line arguments:
-    - `--dsdpath` (Optional): The path to the DSD directory to use. Uses iamcompact_nomenclature DSD by default.
+    - `--dsdpath` (Optional): The path to the DSD directory to use. Uses nomenclature_adapter DSD by default.
     - `--codelist`: The name of the codelist attribute of the DSD to format.
     - `--output`: The path and name of output file to write.
     """

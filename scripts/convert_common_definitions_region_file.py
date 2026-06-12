@@ -26,7 +26,7 @@ import ruamel.yaml as yaml
 from nomenclature import countries
 from nomenclature.codelist import RegionCodeList
 
-import iamcompact_nomenclature as icnom
+import nomenclature_adapter as icnom
 
 # %%
 # Assign user-defined ISO3 code for Kosovo (which is not defined in the

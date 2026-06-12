@@ -195,10 +195,10 @@ def check_var_aggregates(
         there are separate hierarchies of components (such as "Final Energy"
         being disaggregated both by sector and by energy carrier). If the
         function is called from the top-level as
-        `iamcompact_nomenclature.check_var_aggregates`, `dsd` is an optional
+        `nomenclature_adapter.check_var_aggregates`, `dsd` is an optional
         keyword argument, and will be set equal to the return value of
-        `iamcompact_nomenclature.get_dsd()` by default. If it is called as
-        `iamcompact_nomenclature.aggregation.check_var_aggregates`, `dsd` is a
+        `nomenclature_adapter.get_dsd()` by default. If it is called as
+        `nomenclature_adapter.aggregation.check_var_aggregates`, `dsd` is a
         required argument.
     rtol : float, optional
         Relative tolerance for the check. Passed to `numpy.isclose`, see the
@@ -479,19 +479,19 @@ def check_region_aggregates(
         The `DataStructureDefinition` to use for the check. This object should
         have been created with the `nomenclature` package. If the function is
         called from the top-level as
-        `iamcompact_nomenclature.check_region_aggregates`, `dsd` is an optional
+        `nomenclature_adapter.check_region_aggregates`, `dsd` is an optional
         keyword argument, and will be set equal to the return value of
-        `iamcompact_nomenclature.get_dsd()` by default. If it is called as
-        `iamcompact_nomenclature.aggregation.check_region_aggregates`, `dsd` is
+        `nomenclature_adapter.get_dsd()` by default. If it is called as
+        `nomenclature_adapter.aggregation.check_region_aggregates`, `dsd` is
         a required argument.
     processor : nomenclature.RegionProcessor
         The `RegionProcessor` to use for the check. This object should have been
         created with the `nomenclature` package. If the function is called from
-        the top-level as `iamcompact_nomenclature.check_region_aggregates`,
+        the top-level as `nomenclature_adapter.check_region_aggregates`,
         `processor` is an optional keyword argument, and will be set equal to
-        the return value of `iamcompact_nomenclature.get_region_processor()` by
+        the return value of `nomenclature_adapter.get_region_processor()` by
         default. If it is called as
-        `iamcompact_nomenclature.aggregation.check_region_aggregates`,
+        `nomenclature_adapter.aggregation.check_region_aggregates`,
         `processor` is a required argument.
     rtol_difference : float, optional
         Relative tolerance for the check of the difference between the original
