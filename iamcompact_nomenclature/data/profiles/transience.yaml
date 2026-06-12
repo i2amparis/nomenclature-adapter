@@ -1,6 +1,6 @@
 repositories:
   transience-defs:
-    url: https://github.com/i2amparis/transience-nomenclature-definitions.git
+    url: https://github.com/TRANSIENCE-MIC3/transience-nomenclature-definitions.git
     release: main
   common-definitions-fork:
     url: https://github.com/ciceroOslo/common-definitions.git
