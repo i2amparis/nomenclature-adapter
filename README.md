@@ -7,21 +7,21 @@ for `nomenclature-iamc` definitions.
 
 To install as a Python package using `pip`:
 ```
-pip install git+https://github.com/i2amparis/nomenclature-template.git
+pip install git+https://github.com/i2amparis/nomenclature-adapter.git
 ```
 Or to install a specific branch or version (`branchname` in the command below):
 ```
-pip install git+https://github.com/i2amparis/nomenclature-template.git@branchname
+pip install git+https://github.com/i2amparis/nomenclature-adapter.git@branchname
 ```
 
 If you use [poetry](https://python-poetry.org/docs/), you can use the following
 commands (when in your project directory):
 ```
-poetry add git+https://github.com/i2amparis/nomenclature-template.git
+poetry add git+https://github.com/i2amparis/nomenclature-adapter.git
 ```
 or
 ```
-poetry add git+https://github.com/i2amparis/nomenclature-template.git#branchname
+poetry add git+https://github.com/i2amparis/nomenclature-adapter.git#branchname
 ```
 
 Eventually, the package will probably be published on [PyPi](https://pypi.org/)
@@ -32,7 +32,7 @@ for using the more complex commands above to install from the repository.
 At the moment, there are no plans to create a
 [conda](https://docs.conda.io/en/latest/) package. If you have a pressing need
 for that, please [create an
-issue](https://github.com/i2amparis/nomenclature-template/issues).
+issue](https://github.com/i2amparis/nomenclature-adapter/issues).
 
 
 ## Usage
@@ -40,7 +40,7 @@ The repository includes profile manifests in the top-level `profiles/`
 directory. These manifests point to external
 definition repositories, which are cloned into a local cache when a profile is
 loaded. By default, the cache is located in the user's cache directory, for
-example `~/.cache/nomenclature-template` on Linux. Set the environment variable
+example `~/.cache/nomenclature-adapter` on Linux. Set the environment variable
 `NOMENCLATURE_PROFILE_CACHE` to choose a different cache location.
 
 Use the API in the Python package defined by this repository to obtain a

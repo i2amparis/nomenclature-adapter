@@ -22,7 +22,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 _profiles_dir_name: Final[str] = "profiles"
 _profile_cache_env_var: Final[str] = "NOMENCLATURE_PROFILE_CACHE"
-_profile_cache_app_name: Final[str] = "nomenclature-template"
+_profile_cache_app_name: Final[str] = "nomenclature-adapter"
 DEFAULT_PROFILE: Final[str] = "iamcompact"
 
 dimensions: Final[tuple[str, ...]] = (
