@@ -1,8 +1,10 @@
 """Defaults for definitions to use."""
 from collections.abc import Sequence
 import logging
+import os
 from pathlib import Path
 import shutil
+import sys
 from typing import Final, Optional
 
 from nomenclature.processor.region import RegionAggregationMapping
@@ -20,7 +22,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 _data_root: Final[Path] = Path(__file__).parent / "data"
 _profiles_root: Final[Path] = _data_root / "profiles"
-_profile_cache_root: Final[Path] = _data_root / "definition_repos"
+_profile_cache_env_var: Final[str] = "NOMENCLATURE_PROFILE_CACHE"
+_profile_cache_app_name: Final[str] = "nomenclature-template"
 
 _profile_labels: Final[dict[str, str]] = {
     "iamcompact-default": "IAM COMPACT Default",
@@ -38,6 +41,25 @@ dimensions: Final[tuple[str, ...]] = (
 _dsds: dict[str, nomenclature.DataStructureDefinition] = {}
 _individual_dsds: dict[str, list[nomenclature.DataStructureDefinition]] = {}
 _region_processors: dict[str, nomenclature.RegionProcessor | None] = {}
+
+
+def _default_cache_root() -> Path:
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Caches" / _profile_cache_app_name
+    if sys.platform == "win32":
+        base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA")
+        if base:
+            return Path(base) / _profile_cache_app_name
+
+    return Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) \
+        / _profile_cache_app_name
+
+
+def _get_profile_cache_root() -> Path:
+    configured_cache_root = os.environ.get(_profile_cache_env_var)
+    if configured_cache_root:
+        return Path(configured_cache_root).expanduser()
+    return _default_cache_root()
 
 
 def _profile_label(profile_name: str) -> str:
@@ -142,7 +164,7 @@ def _materialize_profile(profile_name: str) -> Path | None:
     if manifest is None:
         return None
 
-    profile_root = _profile_cache_root / manifest.stem
+    profile_root = _get_profile_cache_root() / "definition_repos" / manifest.stem
     profile_root.mkdir(parents=True, exist_ok=True)
     (profile_root / "definitions").mkdir(exist_ok=True)
     (profile_root / "mappings").mkdir(exist_ok=True)
@@ -166,7 +188,7 @@ def _get_profile_root(profile_name: str) -> Path:
     if root is not None:
         return root
 
-    root = _profile_cache_root / profile_name
+    root = _get_profile_cache_root() / "definition_repos" / profile_name
     if not root.is_dir():
         raise FileNotFoundError(f"Unknown profile '{profile_name}'")
     return root

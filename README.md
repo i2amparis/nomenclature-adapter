@@ -3,9 +3,8 @@ Data structure definition for validation of model outputs in the HORIZON EUROPE
 project IAM COMPACT, using nomenclature-iamc
 
 ## Installation
-This package can either be installed as a Python package, or the
-`/iamcompact-nomenclature/data/definitions` folder can be downloaded and used
-directly with the `nomenclature-iamc` package.
+This package can be installed as a Python package and used as a profile loader
+for `nomenclature-iamc` definitions.
 
 To install as a Python package using `pip`:
 ```
@@ -38,29 +37,19 @@ issue](https://github.com/ciceroOslo/iamcompact-nomenclature/issues).
 
 
 ## Usage
-You can either
-1. use the files in this repository directly with the `nomenclature` package to
-   validate model outputs, or
-2. use the API in the Python package defined by this repository to obtain a
-   nomenclature `DataStructureDefinition` object and a `RegionProcessor` object,
-   which can then be used with the nomenclature API to perform validation and
-   aggregation checking.
+The package includes profile manifests in
+`iamcompact_nomenclature/data/profiles/`. These manifests point to external
+definition repositories, which are cloned into a local cache when a profile is
+loaded. By default, the cache is located in the user's cache directory, for
+example `~/.cache/nomenclature-template` on Linux. Set the environment variable
+`NOMENCLATURE_PROFILE_CACHE` to choose a different cache location.
 
-### 1. Use files directly
+Use the API in the Python package defined by this repository to obtain a
+nomenclature `DataStructureDefinition` object and a `RegionProcessor` object,
+which can then be used with the nomenclature API to perform validation and
+aggregation checking.
 
-To use the files directly, download or clone the repository to a folder on your
-computer.
-
-The data definitions and region mappings are then found in the directories
-`<repo_path>/iamcompact_nomenclature/data/definitions/` and
-`<repo_path>/iamcompact_nomenclature/data/mappings/`, respectively, where
-`<repo_path>` is the path to the root folder of the downloaded/cloned
-repository. Pass these paths to `nomenclature.DataSrructureDefinition()` and
-`nomenclature.RegionProcessor.from_directory()`, respectively, to get
-`DataStructureDefinition` and `RegionProcessor` objects that you can use for
-validation.
-
-### 2. Get `DataStructureDefinition` and `RegionProcessor` objects from code in this package
+### Get `DataStructureDefinition` and `RegionProcessor` objects from code in this package
 
 To get a `nomenclature.DataSrructureDefinition` and
 `nomenclature.RegionProcessor` object directly from the code in this repository,
@@ -141,15 +130,12 @@ equal to the sum of their component variables, and whether the values of
 extensive variables for aggregate regions are equal to the sum of the values for
 each constituent country or subregion.
 
-Both require the data structure
-definition used (stored in `iamcompact_nomenclature/data/definitions` or
-supplied as an external `nomenclature.DataStructureDefinition` object) to
-contain tags that specify which variables are aggregate variables that should
-be checked and/or extensive variables that can be summed across regions.
-Checking regional aggregations also require a `nomenclature.RegionProcessor`
-instance that contains the region mappings, either obtained from
-`iamcompact_nomenclature/data/mappings` through the `get_region_processor()`
-function or by supplying an externally constructed instance.
+Both require a data structure definition containing tags that specify which
+variables are aggregate variables that should be checked and/or extensive
+variables that can be summed across regions. Checking regional aggregations also
+requires a `nomenclature.RegionProcessor` instance that contains the region
+mappings. These objects can be obtained through `get_dsd()` and
+`get_region_processor()`, or supplied as externally constructed instances.
 
 ### Aggregate variables check
 
