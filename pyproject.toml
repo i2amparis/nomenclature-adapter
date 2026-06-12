@@ -23,7 +23,6 @@ dev = [
     "ipython>=8.20.0",
     "pytest>=8.0.0",
     "ipykernel>=6.29.0",
-    "dvc[ssh]>=3.48.4"
 ]
 
 [tool.hatch.metadata]
