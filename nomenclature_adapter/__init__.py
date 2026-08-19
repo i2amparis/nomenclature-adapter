@@ -10,6 +10,8 @@ from .default_definitions import (
     DEFAULT_PROFILE,
     dimensions,
     get_dsd,
+    get_profile_manifest,
+    get_profile_repo_path,
     get_region_processor,
     get_validation_profiles,
 )

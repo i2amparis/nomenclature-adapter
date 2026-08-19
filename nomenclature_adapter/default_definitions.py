@@ -329,3 +329,78 @@ def get_region_processor(
         _region_processors[profile_name] = _load_region_processor(profile_name)
 
     return _region_processors[profile_name]
+
+
+def get_profile_manifest(profile_name: Optional[str] = None) -> dict:
+    """Return the parsed YAML manifest for a validation profile.
+
+    This gives other packages (e.g. a vetting-checks adapter) access to
+    top-level keys in a profile manifest that this package itself does not
+    interpret, without having to duplicate profile lookup and YAML parsing.
+
+    Parameters
+    ----------
+    profile_name : str, optional
+        Name of the validation profile. Optional, defaults to the currently
+        selected profile (see `_get_profile_name`).
+
+    Returns
+    -------
+    dict
+        The parsed contents of the profile's manifest YAML file.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no manifest is found for `profile_name`.
+    """
+    if profile_name is None:
+        profile_name = _get_profile_name()
+    manifest = _get_profile_manifest(profile_name)
+    if manifest is None:
+        raise FileNotFoundError(f"Unknown profile '{profile_name}'")
+    with manifest.open("r", encoding="utf-8") as stream:
+        return yaml.safe_load(stream) or {}
+
+
+def get_profile_repo_path(
+    repo_name: str,
+    profile_name: Optional[str] = None,
+) -> Path:
+    """Return the local path of one of a profile's cloned definition repos.
+
+    Materializes (clones/updates) the profile's repositories if needed, same
+    as `get_dsd` and `get_region_processor` do internally, and returns the
+    local path of the requested repository.
+
+    Parameters
+    ----------
+    repo_name : str
+        Name of the repository, as given as a key under `repositories:` in
+        the profile manifest.
+    profile_name : str, optional
+        Name of the validation profile. Optional, defaults to the currently
+        selected profile (see `_get_profile_name`).
+
+    Returns
+    -------
+    pathlib.Path
+        Local path of the cloned repository.
+
+    Raises
+    ------
+    FileNotFoundError
+        If `profile_name` is unknown, or if it has no repository named
+        `repo_name`.
+    """
+    if profile_name is None:
+        profile_name = _get_profile_name()
+    profile_root = _materialize_profile(profile_name)
+    if profile_root is None:
+        raise FileNotFoundError(f"Unknown profile '{profile_name}'")
+    repo_path = profile_root / repo_name
+    if not repo_path.is_dir():
+        raise FileNotFoundError(
+            f"Repository '{repo_name}' not found for profile '{profile_name}'"
+        )
+    return repo_path

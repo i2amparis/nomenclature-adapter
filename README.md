@@ -1,7 +1,6 @@
 # nomenclature-adapter
 
-`nomenclature-adapter` is a small Python package that loads validation
-nomenclature profiles for Integrated Assessment Model (IAM) result checking.
+`nomenclature-adapter` is a small Python package that loads validationnomenclature profiles for Integrated Assessment Model (IAM) result checking.
 It builds on [`nomenclature-iamc`](https://github.com/IAMconsortium/nomenclature)
 and adds a project-profile layer so one validation UI can switch between
 different sets of models, regions, variables, scenarios, and region mappings.
