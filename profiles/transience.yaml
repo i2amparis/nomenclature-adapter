@@ -1,28 +1,19 @@
+# NB! Repository declaration order below is significant: when a dimension's
+# codes are defined in more than one repository, the repository listed
+# *first* takes precedence (see nomenclature_adapter.default_definitions
+# ._get_definitions_paths). 
 repositories:
   transience-defs:
     url: https://github.com/TRANSIENCE-MIC3/transience-nomenclature-definitions.git
     release: multi_nomenclature
-  common-definitions-fork:
-    url: https://github.com/ciceroOslo/common-definitions.git
-    release: main
+  common-definitions:
+    url: https://github.com/IAMconsortium/common-definitions.git
+    release: 032b4b7ca9e8a0b1f27ada97b5e4323cf89fd721
 dimensions:
   - variable
   - region
   - model
   - scenario
-definitions:
-  variable:
-    repository: transience-defs
-    file: definitions/variable/energy/capacity-electricity.yaml
-  region:
-    repository: transience-defs
-    file: definitions/region/common.yaml
-  model:
-    repository: transience-defs
-    file: definitions/model/transience_models.yaml
-  scenario:
-    repository: transience-defs
-    file: definitions/scenario/common_scenarios.yaml
 mappings:
   repository: transience-defs
   file: mappings/GCAM_7.1.yaml

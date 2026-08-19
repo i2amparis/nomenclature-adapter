@@ -7,7 +7,15 @@ authors = [
 ]
 dependencies = [
     "gitpython>=3.1.44",
-    "nomenclature-iamc",
+    # Pinned to a minor version range rather than left unpinned: nomenclature-iamc
+    # is pre-1.0, so minor versions may not be backwards compatible. The lower
+    # bound (0.31.1) is the version this package has actually been tested
+    # against; in particular, versions before 0.26.0 had a bug where the
+    # default `illegal_characters` description validation silently did not run
+    # (fixed upstream in IAMconsortium/nomenclature#504), so pinning below that
+    # would mask real validation errors in definitions content rather than
+    # avoid them.
+    "nomenclature-iamc>=0.31.1,<0.32",
     "pyam-iamc>=3.0",
     "pyyaml>=6.0",
 ]

@@ -1,28 +1,19 @@
+# NB! Repository declaration order below is significant: when a dimension's
+# codes are defined in more than one repository, the repository listed
+# *first* takes precedence (see nomenclature_adapter.default_definitions
+# ._get_definitions_paths). 
 repositories:
-  common-definitions-fork:
-    url: https://github.com/ciceroOslo/common-definitions.git/
-    release: iamcompact-validation-ui
   iamcompact-nomenclature-definitions:
     url: https://github.com/ciceroOslo/iamcompact-nomenclature-definitions.git
-    release: validation-ui
+    release: main
+  common-definitions:
+    url: https://github.com/IAMconsortium/common-definitions.git
+    release: 032b4b7ca9e8a0b1f27ada97b5e4323cf89fd721
 dimensions:
   - variable
   - region
   - model
   - scenario
-definitions:
-  variable:
-    repository: common-definitions-fork
-    file: definitions/variable/emissions/emissions.yaml
-  region:
-    repository: iamcompact-nomenclature-definitions
-    file: definitions/region/common.yaml
-  model:
-    repository: iamcompact-nomenclature-definitions
-    file: definitions/model/iamcompact_iams.yaml
-  scenario:
-    repository: iamcompact-nomenclature-definitions
-    file: definitions/scenario/common_scenarios.yaml
 mappings:
   repository: iamcompact-nomenclature-definitions
   file: mappings/GCAM_7.1.yaml
