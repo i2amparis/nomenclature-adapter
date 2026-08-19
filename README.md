@@ -10,6 +10,11 @@ The package is primarily used by
 can also be imported directly by scripts or notebooks that need the same
 validation definitions.
 
+This package started as [CICERO's `iamcompact-nomenclature`](https://github.com/ciceroOslo/iamcompact-nomenclature),
+built specifically for the HORIZON EUROPE project IAM COMPACT, and has since
+been generalized into a project-agnostic profile loader usable by any project
+(IAM COMPACT and TRANSIENCE are both bundled profiles today, see `profiles/`).
+
 ## What This Repository Contains
 
 - `nomenclature_adapter/`: the Python package used to load profiles, build
