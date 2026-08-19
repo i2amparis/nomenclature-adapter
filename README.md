@@ -1,270 +1,158 @@
 # nomenclature-adapter
-Profile loader for validation nomenclature definitions using nomenclature-iamc.
+
+`nomenclature-adapter` is a small Python package that loads validation
+nomenclature profiles for Integrated Assessment Model (IAM) result checking.
+It builds on [`nomenclature-iamc`](https://github.com/IAMconsortium/nomenclature)
+and adds a project-profile layer so one validation UI can switch between
+different sets of models, regions, variables, scenarios, and region mappings.
+
+The package is primarily used by
+[`i2amparis/validation-ui`](https://github.com/i2amparis/validation-ui), but it
+can also be imported directly by scripts or notebooks that need the same
+validation definitions.
+
+## What This Repository Contains
+
+- `nomenclature_adapter/`: the Python package used to load profiles, build
+  `nomenclature.DataStructureDefinition` objects, create region processors, and
+  run helper validation checks.
+- `profiles/`: YAML profile manifests. Each profile points to one or more
+  external definition repositories and selects the definition and mapping files
+  used for validation.
+- `scripts/`: maintenance utilities for working with definition files.
+
+The repository does not vendor the full model, region, variable, or scenario
+definitions. Those live in separate definition repositories and are cloned on
+demand when a profile is loaded.
+
+## Profiles
+
+Each file in `profiles/` is a validation profile. The filename, without the
+`.yaml` extension, is the profile name exposed to consuming applications.
+
+Current bundled profiles include:
+
+- `iamcompact`: IAM COMPACT validation profile.
+- `transience`: TRANSIENCE validation profile.
+
+A profile manifest defines:
+
+- external Git repositories containing nomenclature definitions;
+- the Git branch, tag, or ref to use for each repository;
+- the definition files for each IAMC dimension;
+- the mapping file used by the region processor.
+
+Example structure:
+
+```yaml
+repositories:
+  project-definitions:
+    url: https://github.com/example/project-definitions.git
+    release: main
+dimensions:
+  - variable
+  - region
+  - model
+  - scenario
+definitions:
+  variable:
+    repository: project-definitions
+    file: definitions/variable/common.yaml
+mappings:
+  repository: project-definitions
+  file: mappings/GCAM_7.1.yaml
+```
 
 ## Installation
-This package can be installed as a Python package and used as a profile loader
-for `nomenclature-iamc` definitions.
 
-To install as a Python package using `pip`:
-```
+Install directly from GitHub with `pip`:
+
+```bash
 pip install git+https://github.com/i2amparis/nomenclature-adapter.git
 ```
-Or to install a specific branch or version (`branchname` in the command below):
-```
-pip install git+https://github.com/i2amparis/nomenclature-adapter.git@branchname
+
+Install a specific branch or tag:
+
+```bash
+pip install git+https://github.com/i2amparis/nomenclature-adapter.git@multi_nomenclature
 ```
 
-If you use [poetry](https://python-poetry.org/docs/), you can use the following
-commands (when in your project directory):
-```
-poetry add git+https://github.com/i2amparis/nomenclature-adapter.git
-```
-or
-```
-poetry add git+https://github.com/i2amparis/nomenclature-adapter.git#branchname
-```
+With `uv`, add the package to another project as a Git dependency:
 
-Eventually, the package will probably be published on [PyPi](https://pypi.org/)
-so that you can install it directly with a command like `pip install
-nomenclature-adapter`. At the moment, this has not been done, hence the need
-for using the more complex commands above to install from the repository.
-
-At the moment, there are no plans to create a
-[conda](https://docs.conda.io/en/latest/) package. If you have a pressing need
-for that, please [create an
-issue](https://github.com/i2amparis/nomenclature-adapter/issues).
-
+```bash
+uv add "nomenclature-adapter @ git+https://github.com/i2amparis/nomenclature-adapter.git@multi_nomenclature"
+```
 
 ## Usage
-The repository includes profile manifests in the top-level `profiles/`
-directory. These manifests point to external
-definition repositories, which are cloned into a local cache when a profile is
-loaded. By default, the cache is located in the user's cache directory, for
-example `~/.cache/nomenclature-adapter` on Linux. Set the environment variable
-`NOMENCLATURE_PROFILE_CACHE` to choose a different cache location.
 
-Use the API in the Python package defined by this repository to obtain a
-nomenclature `DataStructureDefinition` object and a `RegionProcessor` object,
-which can then be used with the nomenclature API to perform validation and
-aggregation checking.
+List the available profiles:
 
-### Get `DataStructureDefinition` and `RegionProcessor` objects from code in this package
+```python
+import nomenclature_adapter as adapter
 
-To get a `nomenclature.DataSrructureDefinition` and
-`nomenclature.RegionProcessor` object directly from the code in this repository,
-use the following code (assumes you have installed the package as in
-"Installation" above):
-
-```
-import nomenclature_adapter as icnom
-
-dsd = icnom.get_dsd()
-processor = icnom.get_region_processor()
+profiles = adapter.get_validation_profiles()
+print(profiles)
 ```
 
-These objects can then be passed to `nomenclature.process()`, or you can call
-`dsd.validate()` or `processor.check_region_aggregation()` to perform
-validations and region aggregation checks.
+Load a profile and get the objects used by `nomenclature-iamc`:
 
-Note that definitions and region mappings are read from disk only at the first
-call to `get_dsd()` and `get_region_processor()`. The resulting objects are
-cached, and subsequent calls just return the same objects. If you need the
-functions to read from disk again, you can pass the keyword argument
-`force_reload=True` to both functions. Note that if the data structure
-definition has changed and you reload it with `get_dsd(force_reload=True)`, you
-should also reload the region processor through
-`get_region_mapping(force_reload=True)`, since the region mapping ususally
-depends on the data structure definition.
+```python
+import nomenclature_adapter as adapter
 
-## Perform validation
-You can validate names (models, scenarios, variables, regions, ...) and
-variable/unit combinations using the functions `get_invalid_items()` and
-`get_invalid_variable_units()` in the `nomenclature_adapter.validation`
-module. Both take a `pyam.IamDataFrame` with your model results as input, and
-return a dictionary of invalid names for each dimension, or DataFrame of invalid
-units, respectively (see details below).
-
-To use them with the names and variable/unit combos defined in the included
-datastructure definition, use the following (where `data_path` is the path and
-filename of your IAMC-formatted CSV or Excel file with model output):
-
-```
-import pyam
-import nomenclature_adapter as icnom
-
-iamdf = pyam.IamDataFrame(data_path)
-
-invalid_names = icnom.validation.get_invalid_items(iamdf)
-
-invalid_units = icnom.validation.get_invalid_variable_units(iamdf)
+dsd = adapter.get_dsd(profile_name="transience")
+processor = adapter.get_region_processor(profile_name="transience")
 ```
 
-Here, `invalid_names` will be a dictionary with dimension names as keys, and a
-list of invalid variable names for each dimension as the corresponding value.
+Run aggregate checks using the helper functions:
 
-`invalid_units` will be `None` if no invalid units are found, and otherwise a
-DataFrame with one row for each variable for which any invalid units were found.
-The DataFrame has the variable names in the index, and two columns:
-  1. `invalid`: The invalid unit name(s), as a string if `iamdf` contains just
-      one unit for the given variable, or a list of strings if there are
-      several different units for the same variable in `iamdf`.
-   2. `expected`: The correct unit name(s) for the given variable, as a string
-      or list of strings.
+```python
+import nomenclature_adapter as adapter
 
-Both functions accept an optional keyword argument `dsd`, which lets you use the
-function with an alternative DataStructureDefinition instance (the default is
-the built-in one, as returned by `nomenclature_adapter.get_dsd()`).
-
-`get_invalid_items()` additionally accepts a keyword argument `dimensions`, that
-lets you specify which dimensions to check names for as a list of strings (must
-match exactly the dimension names used in `iamdf`, including case). By default,
-it uses all dimensions that are present in both `iamdf` and in `dsd` (and
-silently ignores any dimensions that are present in `iamdf` but not in `dsd`).
-
-
-## Check aggregations
-
-The package can be used to check whether the values of aggregate variables are
-equal to the sum of their component variables, and whether the values of
-extensive variables for aggregate regions are equal to the sum of the values for
-each constituent country or subregion.
-
-Both require a data structure definition containing tags that specify which
-variables are aggregate variables that should be checked and/or extensive
-variables that can be summed across regions. Checking regional aggregations also
-requires a `nomenclature.RegionProcessor` instance that contains the region
-mappings. These objects can be obtained through `get_dsd()` and
-`get_region_processor()`, or supplied as externally constructed instances.
-
-### Aggregate variables check
-
-To check all aggregate variables in an `IamDataFrame` named `iamdf`, use the
-following call:
-
-```
-import nomenclature_adapter as icnom
-
-results = icnom.check_var_aggregates(iamdf)
+variable_errors = adapter.check_var_aggregates(data, profile_name="iamcompact")
+region_errors = adapter.check_region_aggregates(data, profile_name="iamcompact")
 ```
 
-This call will by default use the data structure definition supplied by
-`icnom.get_dsd()`. You can override this by passing a custom
-`nomenclature.DataStructureDefinition` object to `check_var_aggregates` through
-the `dsd` keyword argument. See the function docstring for more details about
-other optional arguments, which let you specify tolerance margins.
+When a profile is loaded, its external definition repositories are cloned into
+a local cache and updated on subsequent loads. The default cache location is
+platform-specific, for example:
 
-`results` is returned as a `VarAggregationCheckResults` object with the following
-attributes:
-* `failed_checks` (`pandas.DataFrame` or `None`): A DataFrame with the checks that did
-  not pass. The value of the aggregate variable is in the column `variable`, the
-  sum of the components in `components`. Will be `None` if all checks passed.
-* `aggregation_map` (`dict`): A dictionary with the aggregated variables that
-  were checked as keys, and the corresponding components used in the sum as
-  values. The latter will either be a list of component variable names in the
-  case of an aggregate with a single set of components, or a list of dicts if
-  the aggregate variables has multiple component hierarchies (such as final
-  energy being disaggregated both by energy type and by sector). In the latter
-  case, the key of each dict will be the name assigned to that hierarchy in the
-  definition of the aggregate variable in the datastructure definition, and the
-  value will be a list of component variable names for that hierarchy. See the
-  [section on variable
-  codelists](https://nomenclature-iamc.readthedocs.io/en/stable/user_guide/variable.html#consistency-across-the-variable-hierarchy)
-  in the nomenclature-iamc documentation for more details about how variable
-  aggregations are specified in nomenclature.
-* `not_checked` (`list` of `str`): A list of variable names that were not
-  checked as aggregate variables. This list will include component variables
-  that were considered only components and not checked as aggregate variables
-  with their own subcomponents.
-* `unknown` (`list` of `str`): List of variables in the checked `IamDataFrame`
-  that were not found in the datastructure definition. This list *should* be
-  empty if the variable names have been validated.
-* `rtol`, `atol` (`float` or `None`): Relative and absolute tolerances used in
-  the check. They will be `None` if they weren't explicitly specified, in which
-  case the defaults values in `numpy.isclose` will have been used.
+- macOS: `~/Library/Caches/nomenclature-adapter`
+- Linux: `~/.cache/nomenclature-adapter`
+- Windows: `%LOCALAPPDATA%\nomenclature-adapter` or
+  `%APPDATA%\nomenclature-adapter`
 
-Even if `.errors` is None, you should check through `.not_checked` to make
-sure that it does not include any variables that should have been checked, and
-also that `.unknown` is empty.
+Set `NOMENCLATURE_PROFILE_CACHE` to use a different cache directory:
 
-**NB!** `check_var_aggregates` will **only** check variables for which the
-`check-aggregate` attribute in the datastructure definition has been specified.
-See the [section on variable
-codelists](https://nomenclature-iamc.readthedocs.io/en/stable/user_guide/variable.html#consistency-across-the-variable-hierarchy)
-in the nomenclature-iamc documentation for more details. If you don't supply
-your own `dsd`, `check-aggregate` and `components` should usually have been set
-for the appropriate variables, but still check `results.not_checked` and
-`results.aggregation_map` to make sure that the function used the aggregates
-that you expected and didn't leave out anything that should have been included.
-
-### Region aggregation check
-
-To check that variables set for aggregate regions match the sum of the same
-variable in constituent regions and countries, use the following call:
-
-```
-import nomenclature_adapter as icnom
-
-results = icnom.check_region_aggregates(iamdf)
+```bash
+export NOMENCLATURE_PROFILE_CACHE=/path/to/profile-cache
 ```
 
-By default this will use the datastructure definition fom `icnom.get_dsd()` and
-the `RegionProcessor` object returned by `icnom.get_region_processor()`. To
-override, use the `dsd` or `processor` keyword arguments to
-`check_region_aggregates`.
+## Adding A Profile
 
-Results are returned as a `RegionAggregationCheckResults` object with the
-following attributes (see also the docstring of
-`nomenclature_adapter.aggregation.RegionAggregationCheckResults`):
-  * `failed_checks` (`pandas.DataFrame` or `None`): A dataframe with the items
-    that failed the checks. It contains three columns:
-    * `original`: The value of the variable for the aggregate, model-native
-      region.
-    * `agregated`: The aggregate of the values for the variable in the
-      constituent regions or countries.
-    * `difference (%)`: The difference between the two values, in percent
-      relative to `original`.
-  * `aggregation_map` (`dict`): A dictionary of dictionaries of the common
-    aggregated regions (keys of the inner dict) and native constituent regions
-    (values of the inner dict) that were used in the checks for each model. The
-    keys of the outer dict are the model names, which will be just one if you
-    are only checking output from a single model.
-  * `common_aggregated_regions` (`dict`): Dictionary of regions that are
-    actually present in the data for each model and which are also aggreagted
-    common regions in the `RegionProcessor` object used.
-  * `regions_not_processed` (`dict`): A dictionary of lists of regions that were
-    not processed for each model. The keys are the model names, and the values
-    are lists of region names. The regions for each model will be the regions
-    that were present in the data for that model, but which are neither common
-    aggregated regions nor constituent regions given in the `RegionProcessor`
-    object.
-  * `vars_not_checked` (`list`): A list of variable names that were not checked
-    for any model.
-  * `unknown_models` (`list`): A list of models that are present in the data,
-    but which are not found among the `RegionProcessor` region mappings.
-  * `unknown_regions` (`dict`): A dictionary of lists of regions that were not
-    found in the region mappings. The keys are the model names, and the values
-    are lists of region names. Should be empty if the region names in `iamdf`
-    have been properly validated.
-  * `unknown_vars` (`list`): A list of variable names that were not found in the
-    datastructure definition. Should be empty if the variable names in `iamdf`
-    have been properly validated.
-  * `dsd` (`nomenclature.DataStructureDefinition`): The data structure
-    definition used in the checks.
-  * `processor` (`nomenclature.RegionProcessor`): The region processor used in
-    the checks.
-  * `rtol` (`float`): The relative tolerance used in the checks.
-  * `processed_data` (`pyam.IamDataFrame`): Data after processing by the
-    `RegionProcessor` object, with native regions renamed and aggregated into
-    common regions according to the rules contained for each model in the
-    `RegionProcessor` object. The same argument as returned by
-    `RegionProcess.apply()`, or the first argument returned by
-    `RegionProcessor.check_region_aggregation()`.
+To add a new validation profile:
 
-If no models contain aggregated regions with the same names and definitions as
-the common aggregated regions defined in the `RegionProcessor` object and in the
-`DataStructureDefinition` object, this function will not be of much use for
-checking aggregate region values against the aggregate values of their
-constituent regions. But it can still be useful for processing the regions, and
-renaming them and aggregating them into common regions for use in a multi-model
-dataset. The result of that processing is given by
-`RegionAggregationCheckResults.processed_data`.
+1. Create a new YAML file in `profiles/`, for example `my-project.yaml`.
+2. Add the external definition repositories under `repositories`.
+3. Select the definition files for `variable`, `region`, `model`, and
+   `scenario`.
+4. Select the mapping file under `mappings`.
+5. Use the new profile name from Python or from the validation UI.
+
+The profile name is the filename stem, so `profiles/my-project.yaml` becomes
+`my-project`.
+
+## Development
+
+Install the package in editable mode from this repository:
+
+```bash
+uv sync
+```
+
+Run tests, if present, with:
+
+```bash
+uv run pytest
+```
+
+The package requires Python 3.13 or newer.
