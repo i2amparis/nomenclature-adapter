@@ -1,7 +1,7 @@
 repositories:
   transience-defs:
     url: https://github.com/TRANSIENCE-MIC3/transience-nomenclature-definitions.git
-    release: main
+    release: multi_nomenclature
   common-definitions-fork:
     url: https://github.com/ciceroOslo/common-definitions.git
     release: main
@@ -26,3 +26,7 @@ definitions:
 mappings:
   repository: transience-defs
   file: mappings/GCAM_7.1.yaml
+vetting:
+  checks:
+    - repository: transience-defs
+      file: vetting/gdp_pop_harmonization.yaml
