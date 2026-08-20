@@ -1,6 +1,6 @@
 # nomenclature-adapter
 
-`nomenclature-adapter` is a small Python package that loads validationnomenclature profiles for Integrated Assessment Model (IAM) result checking.
+`nomenclature-adapter` is a Python package that loads validationnomenclature profiles for Integrated Assessment Model (IAM) result checking.
 It builds on [`nomenclature-iamc`](https://github.com/IAMconsortium/nomenclature)
 and adds a project-profile layer so one validation UI can switch between
 different sets of models, regions, variables, scenarios, and region mappings.
@@ -10,7 +10,7 @@ The package is primarily used by
 can also be imported directly by scripts or notebooks that need the same
 validation definitions.
 
-This package started as [CICERO's `iamcompact-nomenclature`](https://github.com/ciceroOslo/iamcompact-nomenclature),
+This package started as [CICERO&#39;s `iamcompact-nomenclature`](https://github.com/ciceroOslo/iamcompact-nomenclature),
 built specifically for the HORIZON EUROPE project IAM COMPACT, and has since
 been generalized into a project-agnostic profile loader usable by any project
 (IAM COMPACT and TRANSIENCE are both bundled profiles today, see `profiles/`).
