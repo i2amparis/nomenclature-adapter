@@ -5,7 +5,7 @@
 repositories:
   transience-defs:
     url: https://github.com/TRANSIENCE-MIC3/transience-nomenclature-definitions.git
-    release: multi_nomenclature
+    release: main
   common-definitions:
     url: https://github.com/IAMconsortium/common-definitions.git
     release: 032b4b7ca9e8a0b1f27ada97b5e4323cf89fd721

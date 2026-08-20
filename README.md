@@ -78,13 +78,13 @@ pip install git+https://github.com/i2amparis/nomenclature-adapter.git
 Install a specific branch or tag:
 
 ```bash
-pip install git+https://github.com/i2amparis/nomenclature-adapter.git@multi_nomenclature
+pip install git+https://github.com/i2amparis/nomenclature-adapter.git@main
 ```
 
 With `uv`, add the package to another project as a Git dependency:
 
 ```bash
-uv add "nomenclature-adapter @ git+https://github.com/i2amparis/nomenclature-adapter.git@multi_nomenclature"
+uv add "nomenclature-adapter @ git+https://github.com/i2amparis/nomenclature-adapter.git@main"
 ```
 
 ## Usage
