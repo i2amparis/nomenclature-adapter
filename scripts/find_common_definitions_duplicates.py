@@ -16,8 +16,8 @@ from nomenclature.code import (
 )
 from nomenclature.codelist import VariableCodeList
 
-import iamcompact_nomenclature as icnom
-from iamcompact_nomenclature.multi_load import MergedDataStructureDefinition
+import nomenclature_adapter as icnom
+from nomenclature_adapter.multi_load import MergedDataStructureDefinition
 
 # %%
 # Define paths for loading definitions from common-definitions and 

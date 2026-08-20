@@ -64,10 +64,10 @@ def map_regions(
         The `IamDataFrame` to process.
     dsd : DataStructureDefinition, optional
         The `DataStructureDefinition` to validate against. Optional, will call
-        `iamcompact_nomenclature.get_dsd()` if not provided.
+        `nomenclature_adapter.get_dsd()` if not provided.
     region_processor : nomenclature.RegionProcessor, optional
         The `RegionProcessor` object to use for the mapping. If not provided,
-        `iamcompact_nomenclature.get_region_processor()` is used.
+        `nomenclature_adapter.get_region_processor()` is used.
     return_excluded : bool, optional
         Whether to return the part of the input that was excluded from
         processing. Optional, by default False.

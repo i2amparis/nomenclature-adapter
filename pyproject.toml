@@ -1,14 +1,23 @@
 [project]
-name = "iamcompact-nomenclature"
+name = "nomenclature-adapter"
 version = "0.10.1"
-description = "Data structure definition for validation of model outputs in the HORIZON EUROPE project IAM COMPACT, using nomenclature-iamc"
+description = "Profile loader for validation nomenclature definitions using nomenclature-iamc"
 authors = [
     { name = "Jan Ivar Korsbakken", email = "janko@cicero.oslo.no" }
 ]
 dependencies = [
     "gitpython>=3.1.44",
-    "nomenclature-iamc",
+    # Pinned to a minor version range rather than left unpinned: nomenclature-iamc
+    # is pre-1.0, so minor versions may not be backwards compatible. The lower
+    # bound (0.31.1) is the version this package has actually been tested
+    # against; in particular, versions before 0.26.0 had a bug where the
+    # default `illegal_characters` description validation silently did not run
+    # (fixed upstream in IAMconsortium/nomenclature#504), so pinning below that
+    # would mask real validation errors in definitions content rather than
+    # avoid them.
+    "nomenclature-iamc>=0.31.1,<0.32",
     "pyam-iamc>=3.0",
+    "pyyaml>=6.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.13"
@@ -22,11 +31,11 @@ dev = [
     "ipython>=8.20.0",
     "pytest>=8.0.0",
     "ipykernel>=6.29.0",
-    "dvc[ssh]>=3.48.4"
 ]
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["iamcompact_nomenclature"]
+packages = ["nomenclature_adapter"]
+force-include = { "profiles" = "profiles" }

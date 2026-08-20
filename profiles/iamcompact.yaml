@@ -1,0 +1,19 @@
+# NB! Repository declaration order below is significant: when a dimension's
+# codes are defined in more than one repository, the repository listed
+# *first* takes precedence (see nomenclature_adapter.default_definitions
+# ._get_definitions_paths). 
+repositories:
+  iamcompact-nomenclature-definitions:
+    url: https://github.com/i2amparis/iamcompact-nomenclature-definitions.git
+    release: main
+  common-definitions:
+    url: https://github.com/IAMconsortium/common-definitions.git
+    release: 032b4b7ca9e8a0b1f27ada97b5e4323cf89fd721
+dimensions:
+  - variable
+  - region
+  - model
+  - scenario
+mappings:
+  repository: iamcompact-nomenclature-definitions
+  file: mappings/GCAM_7.1.yaml

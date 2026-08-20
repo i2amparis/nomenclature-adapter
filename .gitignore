@@ -6,3 +6,8 @@ __pycache__/
 # Ignore sshfs-mounted DVC remote directory
 /dvc_sshfs_remote/
 
+# Ignore local DVC metadata if DVC is used temporarily
+.dvc/
+.dvcignore
+
+.DS_Store
