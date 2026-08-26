@@ -21,3 +21,5 @@ vetting:
   checks:
     - repository: transience-defs
       file: vetting/gdp_pop_harmonization.yaml
+    - repository: transience-defs
+      file: vetting/transience_ms16_historical.yaml
