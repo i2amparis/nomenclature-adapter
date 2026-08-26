@@ -23,7 +23,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 _profiles_dir_name: Final[str] = "profiles"
 _profile_cache_env_var: Final[str] = "NOMENCLATURE_PROFILE_CACHE"
 _profile_cache_app_name: Final[str] = "nomenclature-adapter"
-DEFAULT_PROFILE: Final[str] = "iamcompact"
+DEFAULT_PROFILE: Final[str] = "transience"
 
 dimensions: Final[tuple[str, ...]] = (
     "model",
@@ -81,6 +81,24 @@ def _get_profile_cache_root() -> Path:
 
 
 def _profile_label(profile_file: Path) -> str:
+    """Display label for a profile: its manifest's `display_name`, if set.
+
+    Falls back to the profile's filename stem (i.e. the profile name itself)
+    if the manifest doesn't exist, isn't valid YAML, or doesn't set
+    `display_name`. `display_name` lets a profile manifest choose its own
+    display capitalization/spacing (e.g. "TRANSIENCE", "IAM COMPACT")
+    independently of the (lowercase, URL/path-safe) profile name used
+    everywhere else (session state, repository/cache paths, etc.).
+    """
+    try:
+        with profile_file.open("r", encoding="utf-8") as stream:
+            config = yaml.safe_load(stream) or {}
+        display_name = config.get("display_name") if isinstance(config, dict) \
+            else None
+        if isinstance(display_name, str) and display_name:
+            return display_name
+    except (OSError, yaml.YAMLError):
+        pass
     return profile_file.stem
 
 

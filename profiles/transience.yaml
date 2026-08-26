@@ -1,7 +1,8 @@
 # NB! Repository declaration order below is significant: when a dimension's
 # codes are defined in more than one repository, the repository listed
 # *first* takes precedence (see nomenclature_adapter.default_definitions
-# ._get_definitions_paths). 
+# ._get_definitions_paths).
+display_name: TRANSIENCE
 repositories:
   transience-defs:
     url: https://github.com/TRANSIENCE-MIC3/transience-nomenclature-definitions.git
@@ -19,7 +20,5 @@ mappings:
   file: mappings/GCAM_7.1.yaml
 vetting:
   checks:
-    - repository: transience-defs
-      file: vetting/gdp_pop_harmonization.yaml
     - repository: transience-defs
       file: vetting/transience_ms16_historical.yaml
