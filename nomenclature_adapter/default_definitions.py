@@ -169,7 +169,23 @@ def _checkout_repository(
     if (repo_path / ".git").is_dir():
         repo = git.Repo(repo_path)
         logger.debug("Fetching updates for %s", repo_path)
-        repo.remotes.origin.fetch()
+        try:
+            repo.remotes.origin.fetch()
+        except git.GitCommandError as exc:
+            # A transient network/auth/rate-limit hiccup fetching updates
+            # shouldn't take down a profile that was already successfully
+            # cloned earlier in this process's lifetime (or a previous
+            # one, if the cache directory persists) -- fall back to
+            # whatever is already on disk, which is still a valid,
+            # previously-working checkout, just possibly not the latest
+            # commit. Mirrors the same tolerance already applied to the
+            # `repo.git.pull` call below.
+            logger.warning(
+                "Could not fetch updates for repository '%s' from %s (%s); "
+                "continuing with the existing local clone, which may not "
+                "be at the latest commit.",
+                repo_name, repo_url, exc,
+            )
     elif repo_path.exists():
         logger.warning(
             "Repository path %s already exists but is not a git repository",
@@ -195,7 +211,15 @@ def _checkout_repository(
         except git.GitCommandError:
             logger.debug("Could not pull ref '%s' for %s", repo_ref, repo_path)
     else:
-        repo.remotes.origin.pull()
+        try:
+            repo.remotes.origin.pull()
+        except git.GitCommandError as exc:
+            logger.warning(
+                "Could not pull updates for repository '%s' from %s (%s); "
+                "continuing with the existing local clone, which may not "
+                "be at the latest commit.",
+                repo_name, repo_url, exc,
+            )
 
 
 def _materialize_profile_repositories(manifest: Path, profile_root: Path) -> None:
