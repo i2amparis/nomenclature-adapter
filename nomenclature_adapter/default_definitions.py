@@ -363,24 +363,32 @@ def _get_definitions_paths(
 def _get_mappings_path(
     profile_name: str,
     force_reload: bool = False,
-) -> Path:
+) -> Path | None:
+    """Return the configured region-mapping file for a profile, if any.
+
+    Returns `None` if the profile manifest does not declare a `mappings`
+    section (repository + file) at all -- e.g. a newly added profile whose
+    project has no models/native-region mappings defined yet. This is
+    distinct from a `mappings` section being declared but pointing at a
+    file that doesn't exist, which is a real misconfiguration and is left
+    for the caller to raise on.
+    """
     profile_root = _get_profile_root(profile_name, force_reload=force_reload)
     config_file = profile_root / "nomenclature.yaml"
-    
-    if config_file.exists():
-        with open(config_file, "r") as f:
-            config = yaml.safe_load(f)
-            mapping_config = config.get("mappings", {})
-            repo_name = mapping_config.get("repository")
-            file_name = mapping_config.get("file")       
-            
-            if repo_name and file_name:
-                specific_file = profile_root / repo_name / file_name
-                if specific_file.exists():
-                    return specific_file
 
-    # Fallback to the local mappings folder if config fails
-    return profile_root / "mappings"
+    if not config_file.exists():
+        return None
+
+    with open(config_file, "r") as f:
+        config = yaml.safe_load(f) or {}
+    mapping_config = config.get("mappings") or {}
+    repo_name = mapping_config.get("repository")
+    file_name = mapping_config.get("file")
+
+    if not (repo_name and file_name):
+        return None
+
+    return profile_root / repo_name / file_name
 
 
 def _load_definitions(
@@ -432,8 +440,19 @@ def _load_definitions(
 #        dsd=get_dsd(profile_name),
 #    )
 
-def _load_region_processor(profile_name: str, force_reload: bool = False):
+def _load_region_processor(
+    profile_name: str, force_reload: bool = False,
+) -> nomenclature.RegionProcessor | None:
     target_file = _get_mappings_path(profile_name, force_reload=force_reload)
+
+    if target_file is None:
+        logger.info(
+            "Profile '%s' does not declare a region-mapping file; no "
+            "RegionProcessor is available for it (native-model-region "
+            "checks and region mapping/aggregation will be skipped).",
+            profile_name,
+        )
+        return None
 
     if not target_file.is_file():
         raise FileNotFoundError(f"Mapping file not found: {target_file}")
@@ -481,7 +500,9 @@ def get_dsd(
 def get_region_processor(
     profile_name: Optional[str] = None,
     force_reload: bool = False,
-):
+) -> nomenclature.RegionProcessor | None:
+    """Return the `RegionProcessor` for a profile, or `None` if the profile
+    does not declare a region-mapping file (see `_load_region_processor`)."""
     if profile_name is None:
         profile_name = _get_profile_name()
 

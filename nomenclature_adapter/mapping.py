@@ -99,7 +99,12 @@ def map_regions(
                                                 keep=False))
         if len(_filter_df) == 0:
             break
-    processed_iamdf: pyam.IamDataFrame = region_processor.apply(_filter_df)
+    # `region_processor` is None for profiles that don't declare a
+    # region-mapping file (see `get_region_processor`) -- there are then no
+    # model-native regions to rename/aggregate, so the (already-filtered-to-
+    # valid-common-region-names) data passes through unchanged.
+    processed_iamdf: pyam.IamDataFrame = region_processor.apply(_filter_df) \
+        if region_processor is not None else _filter_df
     if not return_excluded:
         return processed_iamdf
     invalid_iamdfs: list[pyam.IamDataFrame] = [

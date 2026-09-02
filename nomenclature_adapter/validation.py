@@ -136,10 +136,14 @@ def get_invalid_model_regions(
     invalid_combos: dict[str, list[str]] = dict()
     valid_combos: dict[str, list[str]] = dict()
 
+    # `region_processor` is None for profiles that don't declare a
+    # region-mapping file (see `get_region_processor`) -- there are then no
+    # model-native regions to reconcile against, so every otherwise-invalid
+    # region name stays invalid.
     model_native_regions: dict[str, list[str]] = {
         _model: region_processor.mappings[_model].model_native_region_names
         for _model in region_processor.mappings.keys()
-    }
+    } if region_processor is not None else {}
 
     for _region in check_native_iamdf.region:
         _models = not_none(check_native_iamdf.filter(region=_region)).model

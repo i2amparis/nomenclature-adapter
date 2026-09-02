@@ -1,0 +1,23 @@
+# NB! Repository declaration order below is significant: when a dimension's
+# codes are defined in more than one repository, the repository listed
+# *first* takes precedence (see nomenclature_adapter.default_definitions
+# ._get_definitions_paths).
+display_name: ENTICE
+repositories:
+  entice-nomenclature-definitions:
+    url: https://github.com/i2amparis/entice-nomenclature-definitions.git
+    release: main
+  common-definitions:
+    url: https://github.com/IAMconsortium/common-definitions.git
+    release: 032b4b7ca9e8a0b1f27ada97b5e4323cf89fd721
+dimensions:
+  - variable
+  - region
+  - model
+  - scenario
+# No `mappings:` section yet -- entice-nomenclature-definitions does not yet
+# define any model-native regions (see its README's "Current status"
+# section). `get_region_processor()` returns None for this profile until one
+# is added; native-model-region checks and the region-mapping/aggregation
+# step are then skipped (see default_definitions._load_region_processor).
+# No `vetting:` section yet -- no sectoral/harmonization checks defined yet.
